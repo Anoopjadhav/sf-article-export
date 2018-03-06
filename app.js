@@ -96,6 +96,7 @@ app.get('/auth/sfdc', function(req, res) {
 
 app.get('/download', function(req, res) {
     console.log("send file");
+    // response.download(process.cwd() + '/dist/target.zip');
     res.download(process.cwd() + '/dist/target.zip');
 })
 
@@ -251,9 +252,10 @@ var prepareView = (articleArray, dataCatArray, response) => {
                         console.log(archive.pointer() + ' total bytes');
                         console.log('archiver has been finalized and the output file descriptor has closed.');
                         //response.json({ "returnData": returnData });
-                        response.download(process.cwd() + '/dist/target.zip');
+                        //response.download(process.cwd() + '/dist/target.zip');
                         //response.send(process.cwd() + '/dist/target.zip');
-
+                        //response.redirect('/');
+                        response.render('index', { title: 'Zip file is created in /dist/target.zip, click below link to download.' });
                     });
 
                     // output.on('end', function() {
