@@ -37,20 +37,49 @@ app.use('/users', users);
 //app.use('/oauth/_callback', oauthURI);
 
 
-var oauth;
+var oauth, org;
 
+switch (process.env.NODE_ENV) {
+    case 'test':
+        org = nforce.createConnection({
+            clientId: '3MVG9ZL0ppGP5UrAtic.j1Oafh16lEOpEJKP0RZNgl3ZpzwT_rs7jl0j5SZx.D6lvGKxfWWDtJJ8mEbrcwUW.',
+            clientSecret: '8637247378348242696',
+            // redirectUri: 'http://localhost:3000/oauth/_callback',
+            redirectUri: 'https://sf-article-export.herokuapp.com/oauth/_callback',
+            //loginUri: 'https://ap6.salesforce.com/services/oauth2/token',
+            //apiVersion: 'v27.0', // optional, defaults to current salesforce API version
+            environment: 'sandbox', // optional, salesforce 'sandbox' or 'production', production default
+            mode: 'multi', // optional, 'single' or 'multi' user mode, multi default
+            autoRefresh: true
+        });
+        break;
 
-var org = nforce.createConnection({
+    default:
+        org = nforce.createConnection({
+            clientId: '3MVG9ZL0ppGP5UrAtic.j1Oafh2bm7UDUYfkqfc5UjxpCduNCiq0_B5ooocCE2JQIC7jWxUTlZKJNK273MS.u',
+            clientSecret: '5269115371682466388',
+            redirectUri: 'http://localhost:3000/oauth/_callback',
+            // redirectUri: 'https://sf-article-export.herokuapp.com/oauth/_callback',
+            //loginUri: 'https://ap6.salesforce.com/services/oauth2/token',
+            //apiVersion: 'v27.0', // optional, defaults to current salesforce API version
+            environment: 'sandbox', // optional, salesforce 'sandbox' or 'production', production default
+            mode: 'multi', // optional, 'single' or 'multi' user mode, multi default
+            autoRefresh: true
+        });
+}
+
+/*org = nforce.createConnection({
     clientId: '3MVG9ZL0ppGP5UrAtic.j1Oafh2bm7UDUYfkqfc5UjxpCduNCiq0_B5ooocCE2JQIC7jWxUTlZKJNK273MS.u',
     clientSecret: '5269115371682466388',
-    redirectUri: 'http://localhost:3000/oauth/_callback',
+    // redirectUri: 'http://localhost:3000/oauth/_callback',
+    redirectUri: 'https://sf-article-export.herokuapp.com/oauth/_callback',
     //loginUri: 'https://ap6.salesforce.com/services/oauth2/token',
     //apiVersion: 'v27.0', // optional, defaults to current salesforce API version
     environment: 'sandbox', // optional, salesforce 'sandbox' or 'production', production default
     mode: 'multi', // optional, 'single' or 'multi' user mode, multi default
     autoRefresh: true
 });
-
+*/
 // org.authenticate({ username: username, password: password, securityToken: securityToken }, function(err, resp) {
 //     if (!err) {
 //         console.log('Access Token: ' + resp.access_token);
@@ -61,6 +90,7 @@ var org = nforce.createConnection({
 // });
 app.get('/auth/sfdc', function(req, res) {
     console.log(process.cwd());
+    console.log(org);
     res.redirect(org.getAuthUri());
 });
 
