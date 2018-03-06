@@ -173,7 +173,7 @@ var createCSVFile = (dataArray, cb) => {
     //const Json2csvParser = json2csv;
     // json2csvTransform = json2csv.Transform;
 
-    const fields = ['Article_Content__c', 'Footer_Content__c', 'Sequence__c', 'Title', 'datacategorygroup.Life_Event'];
+    const fields = ['Article_Content__c', 'Footer_Content__c', 'Sequence__c', 'Title', 'datacategorygroup.Life_Event', 'Channels'];
     const opts = { fields };
 
     try {
@@ -224,7 +224,8 @@ var prepareView = (articleArray, dataCatArray, response) => {
             "Footer_Content__c": (returnData[i].footer_content__c) ? 'HTML files/' + returnData[i].id + '_footer.html' : "",
             "Sequence__c": 1,
             "Title": returnData[i].title,
-            "datacategorygroup.Life_Event": returnData[i].datacategoryname
+            "datacategorygroup.Life_Event": returnData[i].datacategoryname,
+            "Channels": 'application+sites+csp'
         })
     }
     console.log(csvJSON.length);
