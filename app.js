@@ -221,8 +221,8 @@ var prepareView = (articleArray, dataCatArray, response) => {
                         console.log(archive.pointer() + ' total bytes');
                         console.log('archiver has been finalized and the output file descriptor has closed.');
                         //response.json({ "returnData": returnData });
-                        // response.attachment(process.cwd() + '/dist/target.zip');
-                        response.send(process.cwd() + '/dist/target.zip');
+                        response.download(process.cwd() + '/dist/target.zip');
+                        //response.send(process.cwd() + '/dist/target.zip');
 
                     });
 
