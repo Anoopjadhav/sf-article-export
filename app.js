@@ -127,8 +127,8 @@ app.get('/oauth/_callback', function(req, res) {
             req.session.oauth = resp;
             oauth = resp;
             //res.send(resp.access_token);
-            res.redirect('/test');
-            //res.redirect('/testDB');
+            //res.redirect('/test');
+            res.redirect('/testDB');
         } else {
             console.log('Error: in _callback ' + err.message);
             res.send(err);
