@@ -1,11 +1,14 @@
 var express = require('express');
 var nforce = require('nforce');
 var _ = require('underscore');
+var session = require('express-session');
 const fs = require('fs');
+const fsExt = require('fs-extra');
 // For synchronous
 const Json2csvParser = require('json2csv').Parser;
 // const json2csv = require('json2csv').parse;
 const path = require('path');
+const https = require('https');
 var archiver = require('archiver');
 var createHTML = require('create-html');
 var favicon = require('serve-favicon');
@@ -31,6 +34,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({ secret: 'hhiiiiisssshhhhhhh', resave: false, saveUninitialized: true, }));
 
 app.use('/', index);
 app.use('/users', users);
@@ -61,7 +65,7 @@ switch (process.env.NODE_ENV) {
             redirectUri: 'http://localhost:3000/oauth/_callback',
             // redirectUri: 'https://sf-article-export.herokuapp.com/oauth/_callback',
             //loginUri: 'https://ap6.salesforce.com/services/oauth2/token',
-            //apiVersion: 'v27.0', // optional, defaults to current salesforce API version
+            apiVersion: 'v41.0', // optional, defaults to current salesforce API version
             environment: 'sandbox', // optional, salesforce 'sandbox' or 'production', production default
             mode: 'multi', // optional, 'single' or 'multi' user mode, multi default
             autoRefresh: true
@@ -88,9 +92,25 @@ switch (process.env.NODE_ENV) {
 //         console.log('Error: ' + err.message);
 //     }
 // });
+app.get('/test', (req, res) => {
+    org.getSObjects({ oauth: req.session.oauth }, function(err, allObj) {
+        if (err) {
+            res.send("Err while fetching obj list");
+
+        } else {
+            res.json(allObj);
+        }
+    })
+    //res.json({ "oauth": oauth, "express-session": req.session.oauth });
+});
 app.get('/auth/sfdc', function(req, res) {
     console.log(process.cwd());
     console.log(org);
+
+    // Clean directory
+    fsExt.emptyDirSync(process.cwd() + '/dist/HTML files');
+    fsExt.ensureDirSync(process.cwd() + '/dist/HTML files');
+    //res.send("done");
     res.redirect(org.getAuthUri());
 });
 
@@ -104,9 +124,11 @@ app.get('/oauth/_callback', function(req, res) {
     org.authenticate({ code: req.query.code }, function(err, resp) {
         if (!err) {
             console.log('Access Token: ' + resp.access_token);
+            req.session.oauth = resp;
             oauth = resp;
             //res.send(resp.access_token);
-            res.redirect('/testDB');
+            res.redirect('/test');
+            //res.redirect('/testDB');
         } else {
             console.log('Error: in _callback ' + err.message);
             res.send(err);
@@ -308,7 +330,9 @@ app.get('/testDB', function(req, response) {
     // var distinct = [];
     var articleArray = [],
         dataCatArray = [];
-    org.query({ query: q, oauth: oauth }, function(err, res) {
+    // org.query({ query: q, oauth: oauth }, function(err, res) { req.session.oauth
+    org.query({ query: q, oauth: req.session.oauth }, function(err, res) {
+
         if (err) {
             console.error(err);
             response.send(err);
@@ -360,7 +384,7 @@ app.get('/testDB', function(req, response) {
                 getCatQuery += ')';
             }
 
-            org.query({ query: getCatQuery, oauth: oauth }, function(err, res) {
+            org.query({ query: getCatQuery, oauth: req.session.oauth }, function(err, res) {
                 if (err) {
                     console.error(err);
                     response.send(err);
