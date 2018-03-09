@@ -115,9 +115,9 @@ app.get('/auth/sfdc', function(req, res) {
 });
 
 app.get('/download', function(req, res) {
-    console.log("send file");
+    console.log("ENT ERR! Permisson to access taarget.zip not granted. Provide folder permission 777.");
     // response.download(process.cwd() + '/dist/target.zip');
-    res.download(process.cwd() + '/dist/target.zip');
+    //res.download(process.cwd() + '/dist/target.zip');
 })
 
 app.get('/oauth/_callback', function(req, res) {
