@@ -104,8 +104,8 @@ app.get('/test', (req, res) => {
     //res.json({ "oauth": oauth, "express-session": req.session.oauth });
 });
 app.get('/auth/sfdc', function(req, res) {
-    console.log(process.cwd());
-    console.log(org);
+   // console.log(process.cwd());
+    //console.log(org);
 
     // Clean directory
     fsExt.emptyDirSync(process.cwd() + '/dist/HTML files');
@@ -139,64 +139,116 @@ app.get('/oauth/_callback', function(req, res) {
 
 
 
+/*
 var createHTMLFIles = (dataArray, currentIndex, cb, hasFooterContent) => {
-    console.log("INSIDE createHTMLFIles");
-    console.log(dataArray.length + '--- --- --- ' + currentIndex);
-    let writableContent = hasFooterContent ? dataArray[currentIndex].footer_content__c : dataArray[currentIndex].article_content__c;
-    let fileName = hasFooterContent ? dataArray[currentIndex].id + '_footer' : dataArray[currentIndex].id;
-    let writeStream = fs.createWriteStream(process.cwd() + '/dist/HTML files/' + fileName + '.html');
+    // console.log("INSIDE createHTMLFIles");
+     //console.log(dataArray.length + '--- --- --- ' + currentIndex);
+     let writableContent = hasFooterContent ? dataArray[currentIndex].footer_content__c : dataArray[currentIndex].article_content__c;
+     let fileName = hasFooterContent ? dataArray[currentIndex].id + '_footer' : dataArray[currentIndex].id;
+     let writeStream = fs.createWriteStream(process.cwd() + '/dist/HTML files/' + fileName + '.html');
+ 
+     let isMasterLanguage= (dataArray[currentIndex].ismasterlanguage == 1) ? true : false;
+     let dir = process.cwd() + '/dist/HTML files/';
+     let language = dataArray[currentIndex].language;
+     let fileName = dataArray[currentIndex].id;
+     let filePath = dir + fileName;
+     
+ 
+     writeStream.write(writableContent, 'utf8');
+ 
+     writeStream.on('finish', () => {
+ 
+         if (dataArray[currentIndex].footer_content__c && !hasFooterContent) {
+             //Article has footer content
+             createHTMLFIles(dataArray, currentIndex, cb, true);
+         } else {
+             //proceed to next article
+             if (currentIndex < dataArray.length - 1) {
+                 currentIndex = currentIndex + 1;
+                 createHTMLFIles(dataArray, currentIndex, cb, false);
+             } else {
+                 cb(null, true);
+             }
+         }
+     });
+ 
+     // close the stream
+     writeStream.end();
+}*/
 
-    writeStream.write(writableContent, 'utf8');
+var createHTMLFIles = (dataArray, currentIndex,cb) => {
+try{
 
-    writeStream.on('finish', () => {
-        console.log('wrote all data to file');
-        if (dataArray[currentIndex].footer_content__c && !hasFooterContent) {
-            createHTMLFIles(dataArray, currentIndex, cb, true);
-        } else {
-            if (currentIndex < dataArray.length - 1) {
-                console.log('file writing');
-                currentIndex = currentIndex + 1;
-                createHTMLFIles(dataArray, currentIndex, cb, false);
-            } else {
-                cb(null, true);
-            }
+dataArray.forEach(function(currentValue,index,dataArray){
+
+    var bFooterContent = (currentValue.footer_content__c == '' || currentValue.footer_content__c == undefined ) ? false : true ;
+    var bArticleContent = (currentValue.article_content__c == '' || currentValue.article_content__c == undefined ) ? false : true ;
+    var isMasterLanguage= (currentValue.ismasterlanguage == 1) ? true : false;
+    var dir = process.cwd() + '/dist/HTML files/';
+    var language = currentValue.language;
+    var fileName = currentValue.id;
+    var filePath = dir + fileName;
+    var writeStream;
+    var writableContent;
+
+    if(!isMasterLanguage){
+        //spanish or arabic
+        dir = process.cwd() + '/dist/HTML files/' + currentValue.id;
+        filePath = dir +'/'+ language +'.html';
+        //create a directory with the name same as ID of the article
+        if (!fs.existsSync(dir)){
+            fs.mkdirSync(dir);
+        }else{
+            console.log("Directory already exist");
         }
-    });
+    }
 
-    // close the stream
-    writeStream.end();
+    //english
+    if(bArticleContent){
+        //Write the Article content
+        writableContent = currentValue.article_content__c;
+        fs.writeFile(filePath + '.html',writableContent,'utf8',function(err){
+            //if (err) throw err;
+          //  console.log("Article File Written");
+        });
+        //writeStream = fs.createWriteStream(filePath + '.html');
+        //writeStream.writeFileSync(writableContent, 'utf8');
+        //writeStream.on('finish', () => {
+        //console.log('wrote all article content data to file');
+        //});
+        //writeStream.end();
+    }
+    //if footer Present write the footer content
+    if(bFooterContent){
+        writableContent = currentValue.footer_content__c;
+        fs.writeFile(filePath + '__footer.html',writableContent,'utf8',function(err){
+            //if (err) throw err;
+            //console.log("Footer File Written");
+        });
+        //writeStream = fs.createWriteStream(filePath + '__footer.html');
+        //writeStream.writeFileSync(writableContent, 'utf8');
+        //writeStream.on('finish', () => {
+        //console.log('wrote all article content data to file');
+        //});
+        //writeStream.end();
+    }
 
-    // fs.writeFileSync('/dist/HTML files/' + dataArray[currentIndex].id + '.html', dataArray[currentIndex].Article_Content__c, 
-    //     function(err) {
-    //         if (err) {
-    //             throw err;
-    //             console.log("HTML file creation err");
-    //             cb(false, null);
-
-    //         } else {
-    //             console.log(dataArray.length + '---- ' + currentIndex);
-
-    //             if (dataArray[currentIndex] < dataArray.length) {
-    //                 console.log('file writing');
-    //                 currentIndex = currentIndex + 1;
-    //                 createHTMLFIles(dataArray, currentIndex, cb);
-    //             } else {
-    //                 cb(null, true);
-    //             }
-    //         }
-    //         console.log('Saved!');
-    //     });
+    if(index == dataArray.length - 1 ){
+        cb(null,true);
+    }
 
 
-
+});
+}catch(err){
+    console.log('error while creating HTML');
 }
-
+}
 
 var createCSVFile = (dataArray, cb) => {
     //const Json2csvParser = json2csv;
     // json2csvTransform = json2csv.Transform;
 
-    const fields = ['Article_Content__c', 'Footer_Content__c', 'Sequence__c', 'Title', 'datacategorygroup.Life_Event', 'Channels'];
+    const fields = ['IsMasterLanguage','Article_Content__c', 'Footer_Content__c', 'Sequence__c', 'Title', 'datacategorygroup.Life_Event', 'Channels','Language'];
     const opts = { fields };
 
     try {
@@ -241,19 +293,22 @@ var prepareView = (articleArray, dataCatArray, response) => {
         // })
     );
     var csvJSON = [];
+
     for (let i = 0; i < returnData.length; i++) {
         csvJSON.push({
+            "IsMasterLanguage":returnData[i].ismasterlanguage,
             "Article_Content__c": 'HTML files/' + returnData[i].id + '.html',
             "Footer_Content__c": (returnData[i].footer_content__c) ? 'HTML files/' + returnData[i].id + '_footer.html' : "",
-            "Sequence__c": 1,
+            "Sequence__c": returnData[i].sequence__c,
             "Title": returnData[i].title,
             "datacategorygroup.Life_Event": returnData[i].datacategoryname,
-            "Channels": 'application+sites+csp'
+            "Channels": 'application+sites+csp',
+            "Language":returnData[i].language
         })
     }
-    console.log(csvJSON.length);
+    //console.log(csvJSON.length);
     //console.log(returnData[0]);
-    console.log(">>>>>>>> Calling createHTMLFIles");
+    //console.log(">>>>>>>> Calling createHTMLFIles");
 
     createHTMLFIles(returnData, 0, (err, success) => {
         if (err) {
@@ -261,7 +316,7 @@ var prepareView = (articleArray, dataCatArray, response) => {
         } else {
 
 
-            console.log("File Created");
+            //console.log("File Created");
 
             // Prepare CSV File
             createCSVFile(csvJSON, (err, resData) => {
@@ -294,6 +349,7 @@ var prepareView = (articleArray, dataCatArray, response) => {
                     archive.directory('dist/', false);
                     archive.finalize();
                     // response.json({ "returnData": returnData });
+                    console.log('CSV & ZIP complete');
                 }
             })
 
@@ -326,7 +382,11 @@ var prepareView = (articleArray, dataCatArray, response) => {
 app.get('/testDB', function(req, response) {
     console.log('old token: ' + oauth.access_token);
 
-    var q = "SELECT Id, Title, Article_Content__c,Footer_Content__c FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'en_US'";
+    var q = "SELECT Id, Title, Article_Content__c,Footer_Content__c, Sequence__c, IsMasterLanguage, Language FROM FAQ__kav where PublishStatus = 'Online'";
+    var q_es= "SELECT Id, Title, Article_Content__c,Footer_Content__c, Sequence__c, IsMasterLanguage, Language FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'es'";
+    var q_ar= "SELECT Id, Title, Article_Content__c,Footer_Content__c, Sequence__c, IsMasterLanguage, Language FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'ar'";
+    
+    //var q = "SELECT Id, Title, Article_Content__c,Footer_Content__c FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'en_US'";
     // var unique = {};
     // var distinct = [];
     var articleArray = [],
@@ -342,7 +402,36 @@ app.get('/testDB', function(req, response) {
 
 
             array = res.records;
-            console.log("res length :: " + array.length);
+            //spanish
+            org.query({ query: q_es, oauth: req.session.oauth }, function(err, res) {
+                if (err) {
+                    console.error(err);
+                    response.send(err);
+                } else {
+                    if(res.records != '' || res.records !=undefined)
+                    {
+                        console.log('spanish  : ----------->');
+                    array.concat(res.records);
+                    console.log(res.records);
+                    }
+                }
+            });
+            //arabic
+            org.query({ query: q_ar, oauth: req.session.oauth }, function(err, res) {
+                if (err) {
+                    console.error(err);
+                    response.send(err);
+                } else {
+                    if(res.records != '' || res.records !=undefined)
+                    {
+                        array.concat(res.records);
+                        console.log('Arabic  : ----------->');
+                        console.log(res.records);
+                    }
+                }
+            });
+
+            //console.log("res length :: " + array.length);
             // for (let i = 0; i< array.length; i++) {
             //  articleArray.push()
             // }
@@ -367,13 +456,16 @@ app.get('/testDB', function(req, response) {
             // }
 
             //console.log("distinct" + distinct.length);
+
+            
+            console.log("records : ------------ > " + array.length);
             var getCatQuery;
             if (array.length) {
                 getCatQuery = "SELECT ParentId, DataCategoryGroupName,DataCategoryName FROM FAQ__DataCategorySelection WHERE ParentId In (";
                 for (let i = 0; i < array.length; i++) {
                     articleArray.push(array[i]._fields);
                     if (i == (array.length - 1)) {
-                        console.log("last elem:: " + i + '  --  ' + array[i]._fields.id);
+                        //console.log("last elem:: " + i + '  --  ' + array[i]._fields.id);
 
                         getCatQuery += "'" + array[i]._fields.id + "'";
                     } else {
@@ -398,7 +490,7 @@ app.get('/testDB', function(req, response) {
                     prepareView(articleArray, dataCatArray, response);
                 }
             });
-            console.log(getCatQuery);
+            //console.log(getCatQuery);
 
         }
     });
