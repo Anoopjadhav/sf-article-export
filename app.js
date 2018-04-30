@@ -31,10 +31,16 @@ app.set('view engine', 'ejs');
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+    extended: false
+}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({ secret: 'hhiiiiisssshhhhhhh', resave: false, saveUninitialized: true, }));
+app.use(session({
+    secret: 'hhiiiiisssshhhhhhh',
+    resave: false,
+    saveUninitialized: true,
+}));
 
 app.use('/', index);
 app.use('/users', users);
@@ -93,7 +99,9 @@ switch (process.env.NODE_ENV) {
 //     }
 // });
 app.get('/test', (req, res) => {
-    org.getSObjects({ oauth: req.session.oauth }, function(err, allObj) {
+    org.getSObjects({
+        oauth: req.session.oauth
+    }, function (err, allObj) {
         if (err) {
             res.send("Err while fetching obj list");
 
@@ -103,8 +111,8 @@ app.get('/test', (req, res) => {
     })
     //res.json({ "oauth": oauth, "express-session": req.session.oauth });
 });
-app.get('/auth/sfdc', function(req, res) {
-   // console.log(process.cwd());
+app.get('/auth/sfdc', function (req, res) {
+    // console.log(process.cwd());
     //console.log(org);
 
     // Clean directory
@@ -114,15 +122,17 @@ app.get('/auth/sfdc', function(req, res) {
     res.redirect(org.getAuthUri());
 });
 
-app.get('/download', function(req, res) {
+app.get('/download', function (req, res) {
     console.log("ENT ERR! Permisson to access taarget.zip not granted. Provide folder permission 777.");
     //res.send("ENT ERR! Permisson to access taarget.zip not granted. Provide folder permission 777.");
     // response.download(process.cwd() + '/dist/target.zip');
     res.download(process.cwd() + '/dist/target.zip');
 });
 
-app.get('/oauth/_callback', function(req, res) {
-    org.authenticate({ code: req.query.code }, function(err, resp) {
+app.get('/oauth/_callback', function (req, res) {
+    org.authenticate({
+        code: req.query.code
+    }, function (err, resp) {
         if (!err) {
             console.log('Access Token: ' + resp.access_token);
             req.session.oauth = resp;
@@ -176,80 +186,70 @@ var createHTMLFIles = (dataArray, currentIndex, cb, hasFooterContent) => {
      writeStream.end();
 }*/
 
-var createHTMLFIles = (dataArray, currentIndex,cb) => {
-try{
+var createHTMLFIles = (dataArray, currentIndex, cb) => {
+    try {
 
-dataArray.forEach(function(currentValue,index,dataArray){
+        dataArray.forEach(function (currentValue, index, dataArray) {
 
-    var bFooterContent = (currentValue.footer_content__c == '' || currentValue.footer_content__c == undefined ) ? false : true ;
-    var bArticleContent = (currentValue.article_content__c == '' || currentValue.article_content__c == undefined ) ? false : true ;
-    var isMasterLanguage= (currentValue.ismasterlanguage == 1) ? true : false;
-    var dir = process.cwd() + '/dist/HTML files/';
-    var language = currentValue.language;
-    var fileName = currentValue.id;
-    var filePath = dir + fileName;
-    var writeStream;
-    var writableContent;
+            var bFooterContent = (currentValue.footer_content__c == '' || currentValue.footer_content__c == undefined) ? false : true;
+            var bArticleContent = (currentValue.article_content__c == '' || currentValue.article_content__c == undefined) ? false : true;
+            var isMasterLanguage = (currentValue.ismasterlanguage == 1) ? true : false;
+            var dir = process.cwd() + '/dist/HTML files/';
+            var language = currentValue.language;
+            var fileName = currentValue.id;
+            var filePath = dir + fileName;
+            var writeStream;
+            var writableContent;
 
-    if(!isMasterLanguage){
-        //spanish or arabic
-        dir = process.cwd() + '/dist/HTML files/' + currentValue.id;
-        filePath = dir +'/'+ language +'.html';
-        //create a directory with the name same as ID of the article
-        if (!fs.existsSync(dir)){
-            fs.mkdirSync(dir);
-        }else{
-            console.log("Directory already exist");
-        }
-    }
+            if (!isMasterLanguage) {
+                //spanish or arabic
+                dir = process.cwd() + '/dist/HTML files/' + currentValue.id;
+                filePath = dir + '/' + language;
+                //create a directory with the name same as ID of the article
+                if (!fs.existsSync(dir)) {
+                    fs.mkdirSync(dir);
+                } else {
+                    console.log("Directory already exist");
+                }
+            }
 
-    //english
-    if(bArticleContent){
-        //Write the Article content
-        writableContent = currentValue.article_content__c;
-        fs.writeFile(filePath + '.html',writableContent,'utf8',function(err){
-            //if (err) throw err;
-          //  console.log("Article File Written");
+            //english
+            if (bArticleContent) {
+                //Write the Article content
+                writableContent = currentValue.article_content__c;
+                fs.writeFile(filePath + '.html', writableContent, 'utf8', function (err) {
+                    if (err) throw err;
+                });
+                
+            }
+            //if footer Present write the footer content
+            if (bFooterContent) {
+                writableContent = currentValue.footer_content__c;
+                fs.writeFile(filePath + '__footer.html', writableContent, 'utf8', function (err) {
+                    if (err) throw err;
+                });
+                
+            }
+
+            if (index == dataArray.length - 1) {
+                cb(null, true);
+            }
+
+
         });
-        //writeStream = fs.createWriteStream(filePath + '.html');
-        //writeStream.writeFileSync(writableContent, 'utf8');
-        //writeStream.on('finish', () => {
-        //console.log('wrote all article content data to file');
-        //});
-        //writeStream.end();
+    } catch (err) {
+        console.log('error while creating HTML');
     }
-    //if footer Present write the footer content
-    if(bFooterContent){
-        writableContent = currentValue.footer_content__c;
-        fs.writeFile(filePath + '__footer.html',writableContent,'utf8',function(err){
-            //if (err) throw err;
-            //console.log("Footer File Written");
-        });
-        //writeStream = fs.createWriteStream(filePath + '__footer.html');
-        //writeStream.writeFileSync(writableContent, 'utf8');
-        //writeStream.on('finish', () => {
-        //console.log('wrote all article content data to file');
-        //});
-        //writeStream.end();
-    }
-
-    if(index == dataArray.length - 1 ){
-        cb(null,true);
-    }
-
-
-});
-}catch(err){
-    console.log('error while creating HTML');
-}
 }
 
 var createCSVFile = (dataArray, cb) => {
     //const Json2csvParser = json2csv;
     // json2csvTransform = json2csv.Transform;
 
-    const fields = ['IsMasterLanguage','Article_Content__c', 'Footer_Content__c', 'Sequence__c', 'Title', 'datacategorygroup.Life_Event', 'Channels','Language'];
-    const opts = { fields };
+    const fields = ['IsMasterLanguage', 'Article_Content__c', 'Footer_Content__c', 'Sequence__c', 'Title', 'datacategorygroup.Life_Event', 'Channels', 'Language'];
+    const opts = {
+        fields
+    };
 
     try {
         // const csv = json2csv(dataArray, opts);
@@ -280,8 +280,8 @@ var prepareView = (articleArray, dataCatArray, response) => {
 
 
     var returnData = _.union(
-        _.map(articleArray, function(obj1) {
-            var same = _.find(dataCatArray, function(obj2) {
+        _.map(articleArray, function (obj1) {
+            var same = _.find(dataCatArray, function (obj2) {
                 return obj1["id"] === obj2["parentid"];
             });
             return same ? _.extend(obj1, same) : obj1;
@@ -296,14 +296,14 @@ var prepareView = (articleArray, dataCatArray, response) => {
 
     for (let i = 0; i < returnData.length; i++) {
         csvJSON.push({
-            "IsMasterLanguage":returnData[i].ismasterlanguage,
+            "IsMasterLanguage": returnData[i].ismasterlanguage,
             "Article_Content__c": 'HTML files/' + returnData[i].id + '.html',
             "Footer_Content__c": (returnData[i].footer_content__c) ? 'HTML files/' + returnData[i].id + '_footer.html' : "",
             "Sequence__c": returnData[i].sequence__c,
             "Title": returnData[i].title,
             "datacategorygroup.Life_Event": returnData[i].datacategoryname,
             "Channels": 'application+sites+csp',
-            "Language":returnData[i].language
+            "Language": returnData[i].language
         })
     }
     //console.log(csvJSON.length);
@@ -327,21 +327,23 @@ var prepareView = (articleArray, dataCatArray, response) => {
                     var archive = archiver('zip');
 
 
-                    output.on('close', function() {
+                    output.on('close', function () {
                         console.log(archive.pointer() + ' total bytes');
                         console.log('archiver has been finalized and the output file descriptor has closed.');
                         //response.json({ "returnData": returnData });
                         //response.download(process.cwd() + '/dist/target.zip');
                         //response.send(process.cwd() + '/dist/target.zip');
                         //response.redirect('/');
-                        response.render('index', { title: 'Zip file is created in /dist/target.zip, click below link to download.' });
+                        response.render('index', {
+                            title: 'Zip file is created in /dist/target.zip, click below link to download.'
+                        });
                     });
 
                     // output.on('end', function() {
                     //     console.log('Data has been drained');
                     //     response.json({ "returnData": returnData });
                     // });
-                    archive.on('error', function(err) {
+                    archive.on('error', function (err) {
                         throw err;
                     });
 
@@ -379,132 +381,110 @@ var prepareView = (articleArray, dataCatArray, response) => {
 
 }
 
-app.get('/testDB', function(req, response) {
+app.get('/testDB', function (req, response) {
     console.log('old token: ' + oauth.access_token);
 
-    var q = "SELECT Id, Title, Article_Content__c,Footer_Content__c, Sequence__c, IsMasterLanguage, Language FROM FAQ__kav where PublishStatus = 'Online'";
-    var q_es= "SELECT Id, Title, Article_Content__c,Footer_Content__c, Sequence__c, IsMasterLanguage, Language FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'es'";
-    var q_ar= "SELECT Id, Title, Article_Content__c,Footer_Content__c, Sequence__c, IsMasterLanguage, Language FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'ar'";
-    
+    var q = "SELECT Id, Title, Article_Content__c,Footer_Content__c, Sequence__c, IsMasterLanguage, Language FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'en_US'";
+    var q_es = "SELECT Id, Title, Article_Content__c,Footer_Content__c, Sequence__c, IsMasterLanguage, Language FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'es'";
+    var q_ar = "SELECT Id, Title, Article_Content__c,Footer_Content__c, Sequence__c, IsMasterLanguage, Language FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'ar'";
+
     //var q = "SELECT Id, Title, Article_Content__c,Footer_Content__c FROM FAQ__kav where PublishStatus = 'Online' AND Language = 'en_US'";
     // var unique = {};
     // var distinct = [];
     var articleArray = [],
         dataCatArray = [];
     // org.query({ query: q, oauth: oauth }, function(err, res) { req.session.oauth
-    org.query({ query: q, oauth: req.session.oauth }, function(err, res) {
+    var array = [];
+    //english
+    org.query({
+        query: q,
+        oauth: req.session.oauth
+    }, function (err, res) {
 
         if (err) {
             console.error(err);
             response.send(err);
         } else {
             //articleArray = res.records;
-
-
             array = res.records;
+            console.log("records after english: ------------ > " + array.length + "--------" + res.records.length + "------ Type : " + typeof(res.records));
             //spanish
-            org.query({ query: q_es, oauth: req.session.oauth }, function(err, res) {
+            org.query({
+                query: q_es,
+                oauth: req.session.oauth
+            }, function (err, res) {
                 if (err) {
                     console.error(err);
                     response.send(err);
                 } else {
-                    if(res.records != '' || res.records !=undefined)
-                    {
-                        console.log('spanish  : ----------->');
-                    array.concat(res.records);
-                    console.log(res.records);
-                    }
+                    array = array.concat(res.records);
+                    
+                    console.log("records after spanish: ------------ > " + array.length + "--------" + res.records.length + "------ type : "+typeof(res.records));
+                    //arabic
+                    org.query({
+                        query: q_ar,
+                        oauth: req.session.oauth
+                    }, function (err, res) {
+                        if (err) {
+                            console.error(err);
+                            response.send(err);
+                        } else {
+                            array  = array.concat(res.records);
+
+                            console.log("records : ------------ > " + array.length + "--------" + res.records.length);
+                            var getCatQuery;
+                            if (array.length) {
+                                getCatQuery = "SELECT ParentId, DataCategoryGroupName,DataCategoryName FROM FAQ__DataCategorySelection WHERE ParentId In (";
+                                for (let i = 0; i < array.length; i++) {
+                                    articleArray.push(array[i]._fields);
+                                    if (i == (array.length - 1)) {
+                                        //console.log("last elem:: " + i + '  --  ' + array[i]._fields.id);
+
+                                        getCatQuery += "'" + array[i]._fields.id + "'";
+                                    } else {
+                                        getCatQuery += "'" + array[i]._fields.id + "',";
+                                    }
+
+
+                                }
+                                getCatQuery += ')';
+                            }
+
+                            org.query({
+                                query: getCatQuery,
+                                oauth: req.session.oauth
+                            }, function (err, res) {
+                                if (err) {
+                                    console.error(err);
+                                    response.send(err);
+                                } else {
+                                    var resArray = res.records;
+
+                                    for (let i = 0; i < resArray.length; i++) {
+                                        dataCatArray.push(resArray[i]._fields);
+                                    }
+                                    prepareView(articleArray, dataCatArray, response);
+                                }
+                            });
+                        }
+                    });
                 }
             });
-            //arabic
-            org.query({ query: q_ar, oauth: req.session.oauth }, function(err, res) {
-                if (err) {
-                    console.error(err);
-                    response.send(err);
-                } else {
-                    if(res.records != '' || res.records !=undefined)
-                    {
-                        array.concat(res.records);
-                        console.log('Arabic  : ----------->');
-                        console.log(res.records);
-                    }
-                }
-            });
-
-            //console.log("res length :: " + array.length);
-            // for (let i = 0; i< array.length; i++) {
-            //  articleArray.push()
-            // }
-            //console.log(array);
-
-            // console.log(array.length);
-            // console.log(array[1]);
-            // console.log(array[1].Record);
-            // // console.log(array[1].attributes);
-
-            // console.log("sad asd as dasd");
-
-            // console.log(array[1]._fields.parentid);
-            // var unique = {};
-            // var distinct = [];
-
-            // for (var i in array) {
-            //     if (typeof(unique[array[i]._fields.parentid]) == "undefined") {
-            //         distinct.push(array[i]._fields.parentid);
-            //     }
-            //     unique[array[i].parentid] = 0;
-            // }
-
-            //console.log("distinct" + distinct.length);
-
-            
-            console.log("records : ------------ > " + array.length);
-            var getCatQuery;
-            if (array.length) {
-                getCatQuery = "SELECT ParentId, DataCategoryGroupName,DataCategoryName FROM FAQ__DataCategorySelection WHERE ParentId In (";
-                for (let i = 0; i < array.length; i++) {
-                    articleArray.push(array[i]._fields);
-                    if (i == (array.length - 1)) {
-                        //console.log("last elem:: " + i + '  --  ' + array[i]._fields.id);
-
-                        getCatQuery += "'" + array[i]._fields.id + "'";
-                    } else {
-                        getCatQuery += "'" + array[i]._fields.id + "',";
-                    }
-
-
-                }
-                getCatQuery += ')';
-            }
-
-            org.query({ query: getCatQuery, oauth: req.session.oauth }, function(err, res) {
-                if (err) {
-                    console.error(err);
-                    response.send(err);
-                } else {
-                    var resArray = res.records;
-
-                    for (let i = 0; i < resArray.length; i++) {
-                        dataCatArray.push(resArray[i]._fields);
-                    }
-                    prepareView(articleArray, dataCatArray, response);
-                }
-            });
-            //console.log(getCatQuery);
-
         }
     });
-
+    //console.log(getCatQuery);
 })
+
+
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     var err = new Error('Not Found');
     err.status = 404;
     next(err);
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
