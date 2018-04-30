@@ -194,6 +194,7 @@ var createHTMLFIles = (dataArray, currentIndex, cb) => {
             var bFooterContent = (currentValue.footer_content__c == '' || currentValue.footer_content__c == undefined) ? false : true;
             var bArticleContent = (currentValue.article_content__c == '' || currentValue.article_content__c == undefined) ? false : true;
             var isMasterLanguage = (currentValue.ismasterlanguage == 1) ? true : false;
+            console.log('ismasterLnaguage : ' +  isMasterLanguage);
             var dir = process.cwd() + '/dist/HTML files/';
             var language = currentValue.language;
             var fileName = currentValue.id;
@@ -225,7 +226,7 @@ var createHTMLFIles = (dataArray, currentIndex, cb) => {
             //if footer Present write the footer content
             if (bFooterContent) {
                 writableContent = currentValue.footer_content__c;
-                fs.writeFile(filePath + '__footer.html', writableContent, 'utf8', function (err) {
+                fs.writeFile(filePath + '_footer.html', writableContent, 'utf8', function (err) {
                     if (err) throw err;
                 });
                 
@@ -296,13 +297,13 @@ var prepareView = (articleArray, dataCatArray, response) => {
 
     for (let i = 0; i < returnData.length; i++) {
         csvJSON.push({
-            "IsMasterLanguage": returnData[i].ismasterlanguage,
-            "Article_Content__c": 'HTML files/' + returnData[i].id + '.html',
-            "Footer_Content__c": (returnData[i].footer_content__c) ? 'HTML files/' + returnData[i].id + '_footer.html' : "",
+            "IsMasterLanguage": returnData[i].ismasterlanguage == true ? 1 : 0,
+            "Article_Content__c": returnData[i].ismasterlanguage ? 'HTML files/' + returnData[i].id + '.html' : 'HTML files/' + returnData[i].id +'/'+ returnData[i].language +'.html' ,
+            "Footer_Content__c": returnData[i].footer_content__c ? ( returnData[i].ismasterlanguage  ? 'HTML files/' + returnData[i].id + '_footer.html' : 'HTML files/' + returnData[i].id +'/'+ returnData[i].language + '_footer.html' ) : "" ,
             "Sequence__c": returnData[i].sequence__c,
             "Title": returnData[i].title,
             "datacategorygroup.Life_Event": returnData[i].datacategoryname,
-            "Channels": 'application+sites+csp',
+            "Channels": returnData[i].ismasterlanguage == true ? 'application+sites+csp' : '',
             "Language": returnData[i].language
         })
     }
